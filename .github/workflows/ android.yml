@@ -44,10 +44,20 @@ jobs:
       - name: Compilar a versão web para mobile
         run: MOBILE_BUILD=1 npx vite build
 
-      - name: Verificar index.html
+      - name: Localizar o index.html
         run: |
-          ls -la dist/client
+          echo "--- pastas de saída"
+          ls -la dist .output 2>/dev/null || true
+          find dist .output -maxdepth 3 2>/dev/null | head -60 || true
+          echo "--- index.html encontrados"
+          find . -name index.html -not -path "./node_modules/*" -not -path "./android/*"
+          SRC=$(find . -name index.html -not -path "./node_modules/*" -not -path "./android/*" | head -1 | xargs dirname)
+          echo "Pasta escolhida: $SRC"
+          test -n "$SRC"
+          mkdir -p dist/client
+          if [ "$SRC" != "./dist/client" ]; then cp -r "$SRC"/. dist/client/; fi
           test -f dist/client/index.html
+          ls -la dist/client
 
       - name: Criar projeto Android
         run: npx cap add android
